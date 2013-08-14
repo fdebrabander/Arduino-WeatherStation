@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>Home weather</title>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<style>
+#arduino_data {
+font-size: 4em;
+font-family: "Verdana";
+color: DarkSlateGray;
+text-align: center;
+}
+</style>
+</head>
+
+<body>
+<div id="arduino_data"></div>
+
+<script>
+var arduino = d3.select("#arduino_data");
+var ws = new WebSocket("ws://" + window.location.host + "/arduino");
+ws.onopen = function() {
+    arduino.html("Connected!");
+};
+ws.onmessage = function(event) {
+    arduino.html(event.data);
+};
+</script>
+
+</body>
+
+</html>
