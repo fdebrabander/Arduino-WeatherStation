@@ -3,27 +3,146 @@
 <title>Home weather</title>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <style>
-#arduino_data {
-font-size: 4em;
-font-family: "Verdana";
-color: DarkSlateGray;
-text-align: center;
+body {
+    font: 10px sans-serif;
+}
+.realtime {
+    font-size: 3em;
+    font-family: "Verdana";
+    color: DarkSlateGray;
+    text-align: center;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
 }
 </style>
 </head>
 
 <body>
-<div id="arduino_data"></div>
+<div class="realtime" id="pressure"></div>
+<div class="realtime" id="temperature"></div>
+
+<svg id="hour_temperature" width="800" height="400">
+    <g transform="translate(50, 20)">
+        <g class="x axis"></g>
+        <g class="y axis"></g>
+        <path class="line" />
+    </g>
+</svg>
+
+<svg id="hour_pressure" width="800" height="400">
+    <g transform="translate(50, 20)">
+        <g class="x axis"></g>
+        <g class="y axis"></g>
+        <path class="line" />
+    </g>
+</svg>
 
 <script>
-var arduino = d3.select("#arduino_data");
+var current_pressure = d3.select("#pressure");
+var current_temperature = d3.select("#temperature");
+var last_hour = []
+
 var ws = new WebSocket("ws://" + window.location.host + "/arduino");
-ws.onopen = function() {
-    arduino.html("Connected!");
-};
+
 ws.onmessage = function(event) {
-    arduino.html(event.data);
+    weather = JSON.parse(event.data);
+
+    if ("initial" in weather && last_hour.length == 0) {
+        last_hour = weather.initial;
+        update_axis(last_hour);
+        update_lines(last_hour);
+    } else if ("time" in weather) {
+        last_hour.push(weather);
+        if (last_hour.length > 60) {
+            last_hour.shift();
+        }
+        update_axis(last_hour);
+        update_lines(last_hour);
+    } else {
+        current_pressure.html(weather.pres + " hPa");
+        current_temperature.html(weather.temp + " C");
+    }
 };
+
+var margin  = { top: 20, bottom: 30, right: 20, left: 50 };
+var width = 800 - margin.left - margin.right;
+var height = 400 - margin.top - margin.bottom;
+
+var x_temperature = d3.time.scale()
+    .range([0, width]);
+var y_temperature = d3.scale.linear()
+    .range([height, 0]);
+var x_pressure = d3.time.scale()
+    .range([0, width]);
+var y_pressure = d3.scale.linear()
+    .range([height, 0]);
+var x_axis_temperature = d3.svg.axis()
+    .scale(x_temperature)
+    .orient("bottom");
+var y_axis_temperature = d3.svg.axis()
+    .scale(y_temperature)
+    .orient("left");
+var x_axis_pressure= d3.svg.axis()
+    .scale(x_pressure)
+    .orient("bottom");
+var y_axis_pressure= d3.svg.axis()
+    .scale(y_pressure)
+    .orient("left");
+var temperature_line = d3.svg.line()
+    .x(function(d) { return x_temperature(d.time); })
+    .y(function(d) { return y_temperature(d.temp); });
+var pressure_line = d3.svg.line()
+    .x(function(d) { return x_pressure(d.time); })
+    .y(function(d) { return y_pressure(d.pres); });
+var hour_pressure = d3.select("#hour_pressure").select("g");
+var hour_temperature = d3.select("#hour_temperature").select("g");
+
+hour_temperature.select(".x.axis")
+    .attr("transform", "translate(0," + height + ")");
+hour_pressure.select(".x.axis")
+    .attr("transform", "translate(0," + height + ")");
+
+function update_axis(data) {
+    // Recalculate domains
+    x_temperature.domain(d3.extent(data, function(d) { return d.time; } ));
+    y_temperature.domain(d3.extent(data, function(d) { return d.temp; } ));
+    x_pressure.domain(d3.extent(data, function(d) { return d.time; } ));
+    y_pressure.domain(d3.extent(data, function(d) { return d.pres; } ));
+
+    // Update axis
+    hour_temperature.select(".x.axis").transition().duration(1000)
+        .call(x_axis_temperature);
+    hour_temperature.select(".y.axis").transition().duration(1000)
+        .call(y_axis_temperature);
+    hour_pressure.select(".x.axis").transition().duration(1000)
+        .call(x_axis_pressure);
+    hour_pressure.select(".y.axis").transition().duration(1000)
+        .call(y_axis_pressure);
+}
+
+function update_lines(data) {
+    hour_temperature.select(".line")
+        .transition().duration(1000)
+        .attr("d", temperature_line(data));
+    hour_pressure.select(".line")
+        .transition().duration(1000)
+        .attr("d", pressure_line(data));
+}
+
 </script>
 
 </body>
