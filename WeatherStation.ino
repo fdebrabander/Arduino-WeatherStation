@@ -7,10 +7,9 @@ void setup() {
 
 void loop() {
   Serial.print((double) bmp085_get_temperature() / 10);
-  Serial.print(" C, ");
-  
+  Serial.print(" ");
   Serial.print((double) bmp085_get_pressure() / 100);
-  Serial.println(" hPa");
+  Serial.println();
 
   delay(1000);
 }
