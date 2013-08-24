@@ -58,7 +58,8 @@ class WeatherData(object):
                 average.pressure.average
             )
             timer.reset()
-            average = Sample(Average(), Average())
+            average.temperature.reset()
+            average.pressure.reset()
         average.temperature.add(temperature)
         average.pressure.add(pressure)
 
