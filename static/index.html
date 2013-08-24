@@ -125,9 +125,15 @@ hour_pressure.select(".x.axis")
 function update_axis(data) {
     // Recalculate domains
     x_temperature.domain(d3.extent(data, function(d) { return d.time; } ));
-    y_temperature.domain(d3.extent(data, function(d) { return d.temp; } ));
+    y_temperature.domain([
+        d3.min(data, function(d) { return Math.round(d.temp) - 1; }),
+        d3.max(data, function(d) { return Math.round(d.temp) + 1; })
+    ]);
     x_pressure.domain(d3.extent(data, function(d) { return d.time; } ));
-    y_pressure.domain(d3.extent(data, function(d) { return d.pres; } ));
+    y_pressure.domain([
+        d3.min(data, function(d) { return Math.round(d.pres) - 1; }),
+        d3.max(data, function(d) { return Math.round(d.pres) + 1; })
+    ]);
 
     // Update axis
     hour_temperature.select(".x.axis").transition().duration(1000)
