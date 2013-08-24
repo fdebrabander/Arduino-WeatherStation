@@ -3,12 +3,15 @@ import time
 class Average(object):
     """Calculate the average"""
     def __init__(self):
-        self._summation = float(0)
-        self._count = 0
+        self.reset()
 
     def add(self, value):
         self._summation += value
         self._count += 1
+
+    def reset(self):
+        self._summation = float(0)
+        self._count = 0
 
     @property
     def average(self):
