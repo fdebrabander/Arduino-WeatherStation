@@ -1,0 +1,142 @@
+<html>
+<head>
+<title>Home weather</title>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<style>
+body {
+    font: 10px sans-serif;
+}
+.realtime {
+    font-size: 3em;
+    font-family: "Verdana";
+    color: DarkSlateGray;
+    text-align: center;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+</style>
+</head>
+
+<body>
+
+<svg id="day_temperature" width="800" height="400">
+    <g transform="translate(50, 20)">
+        <g class="x axis"></g>
+        <g class="y axis"></g>
+        <path class="line" />
+    </g>
+</svg>
+
+<svg id="day_pressure" width="800" height="400">
+    <g transform="translate(50, 20)">
+        <g class="x axis"></g>
+        <g class="y axis"></g>
+        <path class="line" />
+    </g>
+</svg>
+
+<script>
+var last_day = []
+
+d3.json("http://" + window.location.host + "/weather-24h", function(error, json) {
+    if (error) {
+        return console.warn(error);
+    }
+
+    if ("24h" in json && last_day.length == 0) {
+        last_day = json["24h"];
+        update_axis(last_day);
+        update_lines(last_day);
+    }
+});
+
+var margin  = { top: 20, bottom: 30, right: 20, left: 50 };
+var width = 800 - margin.left - margin.right;
+var height = 400 - margin.top - margin.bottom;
+
+var x_temperature = d3.time.scale()
+    .range([0, width]);
+var y_temperature = d3.scale.linear()
+    .range([height, 0]);
+var x_pressure = d3.time.scale()
+    .range([0, width]);
+var y_pressure = d3.scale.linear()
+    .range([height, 0]);
+var x_axis_temperature = d3.svg.axis()
+    .scale(x_temperature)
+    .tickFormat(d3.time.format("%H:%M"))
+    .orient("bottom");
+var y_axis_temperature = d3.svg.axis()
+    .scale(y_temperature)
+    .orient("left");
+var x_axis_pressure= d3.svg.axis()
+    .scale(x_pressure)
+    .tickFormat(d3.time.format("%H:%M"))
+    .orient("bottom");
+var y_axis_pressure= d3.svg.axis()
+    .scale(y_pressure)
+    .orient("left");
+var temperature_line = d3.svg.line()
+    .x(function(d) { return x_temperature(d.time); })
+    .y(function(d) { return y_temperature(d.temp); });
+var pressure_line = d3.svg.line()
+    .x(function(d) { return x_pressure(d.time); })
+    .y(function(d) { return y_pressure(d.pres); });
+var day_pressure = d3.select("#day_pressure").select("g");
+var day_temperature = d3.select("#day_temperature").select("g");
+
+day_temperature.select(".x.axis")
+    .attr("transform", "translate(0," + height + ")");
+day_pressure.select(".x.axis")
+    .attr("transform", "translate(0," + height + ")");
+
+function update_axis(data) {
+    // Recalculate domains
+    x_temperature.domain(d3.extent(data, function(d) { return d.time; } ));
+    y_temperature.domain([
+        d3.min(data, function(d) { return Math.round(d.temp) - 1; }),
+        d3.max(data, function(d) { return Math.round(d.temp) + 1; })
+    ]);
+    x_pressure.domain(d3.extent(data, function(d) { return d.time; } ));
+    y_pressure.domain([
+        d3.min(data, function(d) { return Math.round(d.pres) - 1; }),
+        d3.max(data, function(d) { return Math.round(d.pres) + 1; })
+    ]);
+
+    // Update axis
+    day_temperature.select(".x.axis")
+        .call(x_axis_temperature);
+    day_temperature.select(".y.axis")
+        .call(y_axis_temperature);
+    day_pressure.select(".x.axis")
+        .call(x_axis_pressure);
+    day_pressure.select(".y.axis")
+        .call(y_axis_pressure);
+}
+
+function update_lines(data) {
+    day_temperature.select(".line")
+        .attr("d", temperature_line(data));
+    day_pressure.select(".line")
+        .attr("d", pressure_line(data));
+}
+
+</script>
+
+</body>
+
+</html>
