@@ -51,6 +51,10 @@ body {
     </g>
 </svg>
 
+<p>
+    <a href="24h.html">24 uur</a> - <a href="7d.html">7 dagen</a>
+</p>
+
 <script>
 var current_pressure = d3.select("#pressure");
 var current_temperature = d3.select("#temperature");
@@ -66,9 +70,9 @@ ws.onmessage = function(event) {
         update_axis(last_hour);
         update_lines(last_hour);
     } else if ("time" in weather) {
-        last_hour.push(weather);
+        last_hour.unshift(weather);
         if (last_hour.length > 60) {
-            last_hour.shift();
+            last_hour.pop();
         }
         update_axis(last_hour);
         update_lines(last_hour);
@@ -92,12 +96,14 @@ var y_pressure = d3.scale.linear()
     .range([height, 0]);
 var x_axis_temperature = d3.svg.axis()
     .scale(x_temperature)
+    .tickFormat(d3.time.format("%H:%M"))
     .orient("bottom");
 var y_axis_temperature = d3.svg.axis()
     .scale(y_temperature)
     .orient("left");
 var x_axis_pressure= d3.svg.axis()
     .scale(x_pressure)
+    .tickFormat(d3.time.format("%H:%M"))
     .orient("bottom");
 var y_axis_pressure= d3.svg.axis()
     .scale(y_pressure)
