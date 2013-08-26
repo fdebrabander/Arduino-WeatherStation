@@ -73,7 +73,7 @@ class WeatherData(object):
     def store_quarter_avg(self, time, temperature, pressure):
         data = self.avg_to_dict(time, temperature, pressure)
         self.redis.lpush("quarter_avg", json.dumps(data, separators=(',', ':')))
-        self.redis.ltrim("quarter_avg", 0, 15 * 4 * 24 - 1)  # Store 15min avg. for 24 hours
+        self.redis.ltrim("quarter_avg", 0, 4 * 24 - 1)  # Store 15min avg. for 24 hours
 
     def store_hour_avg(self, time, temperature, pressure):
         data = self.avg_to_dict(time, temperature, pressure)
